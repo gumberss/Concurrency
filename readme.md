@@ -41,6 +41,7 @@ Uma observação aqui é que esse nível também pode ser conhecido como Repeata
 
 Snapshot Isolation é um nível de isolamento de banco de dados mais forte que Read Commited, que evita não apenas Leitura Suja (Dirty Read), mas também envita a leitura de dados que foram comitados posteriormente ao início da transação em questão. Nesse nível de isolament, quando um dado é alterado por uma transação mas identifica que existe uma transação em Snapshot Isolation ativa, o banco de dados mantém as duas versões salvas, a antiga para a transação de Snapshot Isolation e a nova para as transações que serão abertas após ela.
 
+![image](https://github.com/gumberss/Rinha-Sharding/assets/38296002/eed05bcc-6a92-4252-8a98-c145beb3a63d)
 
 
 
