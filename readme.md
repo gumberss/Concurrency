@@ -37,16 +37,27 @@ Nesse caso em específico duas transações rodaram ao mesmo tempo em nível de 
 
 ## Snapshot Isolation
 
-Uma observação aqui é que esse nível também pode ser conhecido como Repeatable Read, mas como cada banco de dados implementa o Repeatable Read como acha melhor, eu vou chamar de Snapshot Isolation para manter a discussão em nível conceitual. Como Martin Klepperman fala no livro dele: "Nobody really knows what repeatable read means" [1] isso acontace um pouco porque os isolamentos em si são um pouco ambiguos [2] .
-
 Snapshot Isolation é um nível de isolamento de banco de dados mais forte que Read Commited, que evita não apenas Leitura Suja (Dirty Read), mas também envita a leitura de dados que foram comitados posteriormente ao início da transação em questão. Nesse nível de isolament, quando um dado é alterado por uma transação mas identifica que existe uma transação em Snapshot Isolation ativa, o banco de dados mantém as duas versões salvas, a antiga para a transação de Snapshot Isolation e a nova para as transações que serão abertas após ela.
 
 ![image](https://github.com/gumberss/Rinha-Sharding/assets/38296002/eed05bcc-6a92-4252-8a98-c145beb3a63d)
 
+Nesse caso, por utilizarmos o Snapshot Isolation o banco de dados considera a informação no momento em qua a transação foi iniciada, portanto, mesmo que ela tenha sido alterada, a Alice continua pegando a informação consistente com o momento em que a transação foi iniciada.
+
+### Observações:
+
+Uma observação aqui é que esse nível também pode ser conhecido como Repeatable Read, mas como cada banco de dados implementa o Repeatable Read como acha melhor, eu chamei de Snapshot Isolation para manter a discussão em nível conceitual. Como Martin Klepperman fala no livro dele: "Nobody really knows what repeatable read means" [1] isso acontace um pouco porque os isolamentos em si são ambiguos [2] .
+
+Para habilitar o Snapshot Isolation da forma como mencionado aqui, você precisará habilitar essa funcionalidade [3].
+
+No Sql Server por exemplo existem os dois isolamentos, a diferença é que Snapshot Isolation permite as outras transações continuarem a serem commitadas, por outro lado Repetable Read força a transação com o update aguardar a transação em Repetable Read terminar.
+
+## Serializable 
+
+Interessante como o Snapshot Isolation conseguiu resolver o problema do relatório que a Alice precisava, porém agora Alice está transferindo dinheiro para John e ao memso tempo John está transferindo dinheiro para ela.
 
 
-
-
+# References 
 
 [1] Kleppmann, Martin. Designing Data-Intensive Applications: The Big Ideas Behind Reliable, Scalable, and Maintainable Systems (p. 380). O'Reilly Media. Kindle Edition. 
 [2] https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-95-51.pdf
+[3] https://learn.microsoft.com/en-us/troubleshoot/sql/analysis-services/enable-snapshot-transaction-isolation-level
