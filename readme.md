@@ -60,6 +60,33 @@ Interessante como o Snapshot Isolation conseguiu resolver o problema do relatór
 
 Há duas possíveis formas de resolver Write Skew que eu conheço, uma delas seria travar explicitamente os registros de uma tabela, avisando proativamente que aquele dado sofrera alteração, isso pode ser feito no Postgres com o "select for update". Caso o seu banco de dados não tenha essa opção, muito provavelmente será necessário usar o nível de transação como serializable, impactando na performance mas garantindo a integridade dos dados. Uma observação é que mesmo com lock for update, muito provavelmente o Postgres ainda pode ter o problema de Phantom Read quando um registro novo é adicionado [4], mas não vou entrar em detalhes nesse ponto.
 
+# Particionamento por Load Balancer
+
+# Log Based Message Brokers
+
+Uma outra forma de resolver problemas de concorrências é utilizar um sistema de mensageria baseado em logs (tipo o Kafka), que permite você ordenar as mensagem por uma chave. O Kafka por exemplo permite que você adicione uma chave para ser usada como base para o particionamento das mensagens. No exemplo da rinha, poderiamos criar duas partições no Kafka e usar o id da conta como base para o particionamento e fazer cada uma das instâncias dos nossos serviços pegassem eventos de uma partição, consequentemente apenas uma instância iria inserir transações para determinada conta e assim resolveriamos o problema de concorrência entre instâncias.
+
+![image](https://github.com/gumberss/Rinha-Sharding/assets/38296002/fcab9947-dbcf-4d32-8328-81caa4a8cda4)
+
+1. Gatling envia a transação para o Nginx;
+2. Nginx seleciona a instância que não é responsável pelo gerenciamento da conta;
+3. A instância 2 que não é responsável pela conta publica no Kafka uma mensagem com o número da conta como chave de particionamento;
+4. O Kafka coloca na partição que a Instância 1 é responsável e a Instância 1 recebe esse evento;
+5. A Instância 1 corretamente atualiza o banco de dados com a informação.
+
+Para que a instância 2, que recebeu o request, possa dar a resposta HTTP corretamente, ela pode enviar junto com o evento, um tópico de resposta que a instância 1 pode publicar uma nova mensagem colocando a resposta. Outra forma seria um endpoint HTTP para devolver a resposta, emfim, vai da criativadade de cada um (e dos trade-offs e testes de carga depois). O gerenciamento da resposta pode ser implementado em memoria como no código desse repositório.
+
+![image](https://github.com/gumberss/Rinha-Sharding/assets/38296002/f3018d6c-e585-472b-ad36-bc7b8c5a0cf0)
+
+1. Instância 1 publica a resposta no tópico de resposta do revento que recebeu;
+2. O Kafka encaminha a resposta para a instância 2;
+3. A Instância 2 gerencia a resposta e devolve para o Nginx (pode ser implementado como foi nesse repositório);
+4. O Nginx devolve a resposta para o Gatling.
+
+# Api Sharding 
+
+Essa foi a solução no repositório em questão, devido a limitação de memória e processador, dificilmente conseguiriamos colocar eficientemente um Message Broker como o Kafka, que trata os problemas de tolerância a falha, particionamento, health check dos consumers, garantindo sempre um consumer para receber as mensagens através de protocolos de consensus.
+
 # References 
 
 [1] Kleppmann, Martin. Designing Data-Intensive Applications: The Big Ideas Behind Reliable, Scalable, and Maintainable Systems (p. 380). O'Reilly Media. Kindle Edition. 
