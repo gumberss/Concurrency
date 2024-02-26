@@ -49,12 +49,16 @@ Uma observação aqui é que esse nível também pode ser conhecido como Repeata
 
 Para habilitar o Snapshot Isolation da forma como mencionado aqui, você precisará habilitar essa funcionalidade [3].
 
-No Sql Server por exemplo existem os dois isolamentos, a diferença é que Snapshot Isolation permite as outras transações continuarem a serem commitadas, por outro lado Repetable Read força a transação com o update aguardar a transação em Repetable Read terminar.
+No Sql Server por exemplo existem os dois isolamentos, a diferença é que Snapshot Isolation permite as outras transações continuarem a serem commitadas, por outro lado Repetable Read força a transação com o update aguardar a transação em Repeatable Read terminar.
+
 
 ## Serializable 
 
-Interessante como o Snapshot Isolation conseguiu resolver o problema do relatório que a Alice precisava, porém agora Alice está transferindo dinheiro para John e ao memso tempo John está transferindo dinheiro para ela.
+Interessante como o Snapshot Isolation conseguiu resolver o problema do relatório que a Alice precisava, porém agora imagine que Alice e John querem evitar ficar sem dinheiro e criaram uma regra que roda a cada transação que um dos dois fazem para varificar se a soma do valor guardado dos dois é maior que um determinado valor. Ou seja, no nosso exemplo abaixo, somando o dinheiro da conta da Alice junto com o dinheiro da conta do John, esse valor não pode ser menor do que 200 reais. Fazendo isso Alice e John podem conversar e decidir o que fazer antes de pagar a conta em questão. Porém executando as transações como Snapshot Isolation, nós podemos ter um problema de Write Skew. Isso acontece pois a atualização ocorre em duas contas diferentes, ou seja, dois registros diferentes. No exemplo a seguir Alice quer pagar uma conta de 400 reais e John ao mesmo tempo quer pagar uma conta de 200 reais. O sistema deve impedir uma das duas transações de acontacer pois caso contrário todo o saldo deles seria consumido sem o consentimento deles:
 
+![image](https://github.com/gumberss/Rinha-Sharding/assets/38296002/e778cda4-18af-4777-b88a-f5b20783468d)
+
+Há duas possíveis formas de resolver Write Skew que eu conheço, uma delas seria travar explicitamente os registros de uma tabela, avisando proativamente que aquele dado sofrera alteração, isso pode ser feito no Postgres com o "select for update". Caso o seu banco de dados não tenha essa opção, muito provavelmente será necessário usar o nível de transação como serializable, impactando na performance mas garantindo a integridade dos dados.
 
 # References 
 
