@@ -58,10 +58,11 @@ Interessante como o Snapshot Isolation conseguiu resolver o problema do relatór
 
 ![image](https://github.com/gumberss/Rinha-Sharding/assets/38296002/e778cda4-18af-4777-b88a-f5b20783468d)
 
-Há duas possíveis formas de resolver Write Skew que eu conheço, uma delas seria travar explicitamente os registros de uma tabela, avisando proativamente que aquele dado sofrera alteração, isso pode ser feito no Postgres com o "select for update". Caso o seu banco de dados não tenha essa opção, muito provavelmente será necessário usar o nível de transação como serializable, impactando na performance mas garantindo a integridade dos dados.
+Há duas possíveis formas de resolver Write Skew que eu conheço, uma delas seria travar explicitamente os registros de uma tabela, avisando proativamente que aquele dado sofrera alteração, isso pode ser feito no Postgres com o "select for update". Caso o seu banco de dados não tenha essa opção, muito provavelmente será necessário usar o nível de transação como serializable, impactando na performance mas garantindo a integridade dos dados. Uma observação é que mesmo com lock for update, muito provavelmente o Postgres ainda pode ter o problema de Phantom Read quando um registro novo é adicionado [4], mas não vou entrar em detalhes nesse ponto.
 
 # References 
 
 [1] Kleppmann, Martin. Designing Data-Intensive Applications: The Big Ideas Behind Reliable, Scalable, and Maintainable Systems (p. 380). O'Reilly Media. Kindle Edition. 
 [2] https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-95-51.pdf
 [3] https://learn.microsoft.com/en-us/troubleshoot/sql/analysis-services/enable-snapshot-transaction-isolation-level
+[4] https://jimgray.azurewebsites.net/papers/On%20the%20Notions%20of%20Consistency%20and%20Predicate%20Locks%20in%20a%20Database%20System%20CACM.pdf?from=https://research.microsoft.com/en-us/um/people/gray/papers/On%20the%20Notions%20of%20Consistency%20and%20Predicate%20Locks%20in%20a%20Database%20System%20CACM.pdf&type=path
