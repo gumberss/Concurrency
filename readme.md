@@ -85,7 +85,15 @@ Para que a instância 2, que recebeu o request, possa dar a resposta HTTP corret
 
 # Api Sharding 
 
-Essa foi a solução no repositório em questão, devido a limitação de memória e processador, dificilmente conseguiriamos colocar eficientemente um Message Broker como o Kafka, que trata os problemas de tolerância a falha, particionamento, health check dos consumers, garantindo sempre um consumer para receber as mensagens através de protocolos de consensus.
+Essa foi a solução no repositório em questão, devido a limitação de memória e processador, dificilmente conseguiriamos colocar eficientemente um Message Broker como o Kafka, que trata os problemas de tolerância a falha, particionamento, health check dos consumers, garantindo sempre um consumer para receber as mensagens através de consensus protocol. 
+
+Com a limitação mencionada acima dificilmente a solução desse repositório precisaria de uma boa alteração para conseguir suportar todos esses itens mencionados acima quanto outros também muito importante em sistemas distribuídos, mas ainda sim essa solução serviu como uma boa prova de conceito de como podemos solucionar problemas de concorrência.
+
+A solução do repositorio em questão consiste em cada instância ser responsável por determinadas contas do banco de dados, como são 2 instâncias e 6 contas, basicamente cada instância vai ser responsável por 3 contas apenas e caso chegue para elas um request que não seja de responsabilidade dela, ela automaticamente encaminha o request para a outra instância (passo número 3 da imagem abaixo). O endpoint Http insere os requests em uma fila de processamento e passa a aguardar a resposta na fila de resposta. Um job assincrono é responsável por ler as mensagens da fila de processamento, fazer as validações, inserir em lote (batch) dentro do banco de dados e colocar a resposta dentro da fila de resposta que é lida pelo endpoint Http que encaminha a resposta para o solicitante.
+
+
+![image](https://github.com/gumberss/Rinha-Sharding/assets/38296002/d8e58634-e54b-48d9-a287-5cd92d017fa3)
+
 
 # References 
 
