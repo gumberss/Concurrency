@@ -108,7 +108,7 @@ A solução adotada pelo repositório envolve atribuir a cada instância a respo
 
 Há inúmeras outras formas de resolver problemas de concorrência, e é extremamente interessante utilizar desafios como o da rinha para aprimorar técnicas. Claro que, ao levar uma solução para produção, há muitos outros aspectos a serem considerados além da resolução de problemas de desempenho e concorrência. No entanto, durante o desafio, nada impede que você treine suas habilidades e a capacidade de resolver problemas, adicionando novas ferramentas em seu arsenal.
 
-# References 
+# Referências 
 
 [1] https://www.geeksforgeeks.org/concurrency-problems-in-dbms-transactions
 
