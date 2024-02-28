@@ -1,6 +1,6 @@
 # Introdução
 
-Os desafios relacionados à concorrência em sistemas distribuídos são, em sua maioria, bastante complexos, e existem diferentes níveis de segurança que podemos implementar. A escolha do nível de segurança a ser adotado geralmente depende do que desejamos manter consistente. No caso em que priorizamos a segurança e integridade das informações, especialmente ao lidar com dados inseridos e lidos no banco de dados, optamos por sacrificar um pouco da performance. No entanto, ao escolher o desempenho como prioridade, é crucial tomar decisões com cautela, uma vez que não queremos comprometer a integridade dos dados. Isso é particularmente relevante, pois os dados constituem a parte mais importante de uma empresa, e as decisões estratégicas muitas vezes dependem da sua precisão e confiabilidade.
+Os desafios relacionados à concorrência em sistemas distribuídos são, em sua maioria, bastante complexos [1], e existem diferentes níveis de segurança que podemos implementar. A escolha do nível de segurança a ser adotado geralmente depende do que desejamos manter consistente. No caso em que priorizamos a segurança e integridade das informações, especialmente ao lidar com dados inseridos e lidos no banco de dados, optamos por sacrificar um pouco da performance. No entanto, ao escolher o desempenho como prioridade, é crucial tomar decisões com cautela, uma vez que não queremos comprometer a integridade dos dados. Isso é particularmente relevante, pois os dados constituem a parte mais importante de uma empresa, e as decisões estratégicas muitas vezes dependem da sua precisão e confiabilidade.
 
 # Integridade dos dados
 
@@ -8,7 +8,7 @@ Há diversas abordagens para assegurar a integridade dos dados, cada uma apresen
 
 ## Transações do banco de dados
 
-Um artefato altamente eficaz desenvolvido para lidar não apenas com a concorrência, mas também com vários outros aspectos (que não serão abordados aqui), são os níveis de transação do banco de dados. Cada nível é projetado para resolver potenciais problemas específicos em uma aplicação, e a decisão de aceitar tais problemas em prol do desempenho varia de acordo com as necessidades de cada aplicação.
+Um artefato altamente eficaz desenvolvido para lidar não apenas com a concorrência, mas também com vários outros aspectos (que não serão abordados aqui), são os níveis de transação do banco de dados [2]. Cada nível é projetado para resolver potenciais problemas específicos em uma aplicação, e a decisão de aceitar tais problemas em prol do desempenho varia de acordo com as necessidades de cada aplicação.
 
 É crucial destacar que diferentes bancos de dados podem denominar o mesmo conceito de maneiras distintas. Portanto, é recomendável analisar como o banco de dados escolhido por você se comporta em cada nível de isolamento.
 
@@ -44,7 +44,7 @@ Esse problema, conhecido como 'Non-repetable reads', pode criar desafios signifi
 
 ## Snapshot Isolation
 
-O Snapshot Isolation é um nível de isolamento de banco de dados mais robusto em comparação ao Read Committed. Ele não apenas evita Leitura Suja (Dirty Read), mas também impede a leitura de dados que foram confirmados após o início da transação em questão. Nesse nível de isolamento, quando um dado é alterado por uma transação, mas o sistema identifica a presença de uma transação em Snapshot Isolation, o banco de dados mantém ambas as versões do dado: a versão antiga para a transação de Snapshot Isolation e a versão nova para as transações que serão iniciadas posteriormente.
+O Snapshot Isolation é um nível de isolamento de banco de dados mais robusto em comparação ao Read Committed. Ele não apenas evita Leitura Suja (Dirty Read), mas também impede a leitura de dados que foram confirmados após o início da transação em questão. Nesse nível de isolamento, quando um dado é alterado por uma transação, mas o sistema identifica a presença de uma transação em Snapshot Isolation, o banco de dados mantém ambas as versões do dado [3]: a versão antiga para a transação de Snapshot Isolation e a versão nova para as transações que serão iniciadas posteriormente.
 
 ![image](https://github.com/gumberss/Rinha-Sharding/assets/38296002/eed05bcc-6a92-4252-8a98-c145beb3a63d)
 
@@ -52,9 +52,9 @@ Nesse caso, ao utilizarmos o Snapshot Isolation, o banco de dados considera a in
 
 ### Observações:
 
-É importante observar que esse nível também pode ser referido como Repeatable Read. No entanto, optei por usar o termo Snapshot Isolation para manter a discussão em um nível conceitual, uma vez que cada banco de dados implementa o Repeatable Read de acordo com sua abordagem preferida. Como Martin Klepperman destaca em seu livro: 'Nobody really knows what repeatable read means' [1], em parte devido à ambiguidade inerente aos próprios níveis de isolamento [2].
+É importante observar que esse nível também pode ser referido como Repeatable Read. No entanto, optei por usar o termo Snapshot Isolation para manter a discussão em um nível conceitual, uma vez que cada banco de dados implementa o Repeatable Read de acordo com sua abordagem preferida. Como Martin Klepperman destaca em seu livro: 'Nobody really knows what repeatable read means' [4], em parte devido à ambiguidade inerente aos próprios níveis de isolamento [5].
 
-Por exemplo, no Sql Server, para ativar o Snapshot Isolation da maneira mencionada aqui, é necessário habilitar essa funcionalidade [3].
+Por exemplo, no Sql Server, para ativar o Snapshot Isolation da maneira mencionada aqui, é necessário habilitar essa funcionalidade [6].
 
 ## Serializable 
 
@@ -64,11 +64,11 @@ No entanto, ao executar as transações com o Snapshot Isolation, pode surgir um
 
 ![image](https://github.com/gumberss/Rinha-Sharding/assets/38296002/e778cda4-18af-4777-b88a-f5b20783468d)
 
-Há duas possíveis formas de lidar com o Write Skew que eu conheço. Uma delas é travar explicitamente os registros de uma tabela, notificando proativamente que aquele dado sofrerá alteração. Isso pode ser feito no Postgres com o comando 'select for update'. Caso o seu banco de dados não disponha dessa opção, muito provavelmente será necessário utilizar o nível de isolamento transacional como serializable, o que pode impactar no desempenho, mas garante a integridade dos dados. Vale observar que mesmo com o 'lock for update', é possível que o Postgres ainda enfrente o problema de Phantom Read quando um novo registro é adicionado [4], mas não irei entrar em detalhes nesse ponto.
+Há duas possíveis formas de lidar com o Write Skew que eu conheço. Uma delas é travar explicitamente os registros de uma tabela, notificando proativamente que aquele dado sofrerá alteração. Isso pode ser feito no Postgres com o comando 'select for update'. Caso o seu banco de dados não disponha dessa opção, muito provavelmente será necessário utilizar o nível de isolamento transacional como serializable [8], o que pode impactar no desempenho, mas garante a integridade dos dados. Vale observar que mesmo com o 'lock for update', é possível que o Postgres ainda enfrente o problema de Phantom Read quando um novo registro é adicionado [7], mas não irei entrar em detalhes nesse ponto.
 
 # Particionamento por Load Balancer
 
-Outra abordagem para resolver o problema de concorrência é designar apenas uma instância do serviço para ser responsável por atualizar determinados dados. Neste exemplo específico, poderíamos utilizar o load balancer como particionador da requisição. Em outras palavras, configurar o Nginx para aplicar uma função hash à conta que será atualizada e, com base nesse resultado, determinar a instância responsável por efetuar essa atualização [5].
+Outra abordagem para resolver o problema de concorrência é designar apenas uma instância do serviço para ser responsável por atualizar determinados dados. Neste exemplo específico, poderíamos utilizar o load balancer como particionador da requisição. Em outras palavras, configurar o Nginx para aplicar uma função hash à conta que será atualizada e, com base nesse resultado, determinar a instância responsável por efetuar essa atualização [9].
 
 É importante mencionar que, mesmo ao utilizar o particionamento por load balancer, cada instância ainda pode ter múltiplos threads e gerar concorrência no banco de dados, o que deve ser tratado separadamente. Um exemplo prático desse tipo de implementação foi utilizado nesse repositório e será explicado posteriormente.
 
@@ -101,19 +101,33 @@ Diante das limitações mencionadas acima, a solução deste repositório necess
 
 A solução adotada pelo repositório envolve atribuir a cada instância a responsabilidade por determinadas contas do banco de dados. Como existem 2 instâncias e 6 contas, cada uma é responsável por 3 contas específicas. Se uma instância recebe um request que não está sob sua responsabilidade, ela o encaminha automaticamente para a outra instância (etapa número 3 na imagem abaixo). O endpoint HTTP insere os requests em uma fila de processamento e aguarda a resposta na fila de resposta. Um job assíncrono é encarregado de ler as mensagens da fila de processamento, realizar as validações, inserir em lote (batch) no banco de dados e colocar a resposta na fila de resposta. Essa fila é então lida pelo endpoint HTTP, que encaminha a resposta ao solicitante.
 
-
 ![image](https://github.com/gumberss/Rinha-Sharding/assets/38296002/d8e58634-e54b-48d9-a287-5cd92d017fa3)
 
 
+# Outras formas de resolver
+
+Há inúmeras outras formas de resolver problemas de concorrência, e é extremamente interessante utilizar desafios como o da rinha para aprimorar técnicas. Claro que, ao levar uma solução para produção, há muitos outros aspectos a serem considerados além da resolução de problemas de desempenho e concorrência. No entanto, durante o desafio, nada impede que você treine suas habilidades e a capacidade de resolver problemas, adicionando novas ferramentas em seu arsenal.
+
 # References 
 
-[1] Kleppmann, Martin. Designing Data-Intensive Applications: The Big Ideas Behind Reliable, Scalable, and Maintainable Systems (p. 380). O'Reilly Media. Kindle Edition. 
+[1] https://www.geeksforgeeks.org/concurrency-problems-in-dbms-transactions
 
-[2] https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-95-51.pdf
+[2] https://www.geeksforgeeks.org/transaction-isolation-levels-dbms/
 
-[3] https://learn.microsoft.com/en-us/troubleshoot/sql/analysis-services/enable-snapshot-transaction-isolation-level
+[3] https://www.geeksforgeeks.org/what-is-snapshot-isolation/
 
-[4] https://jimgray.azurewebsites.net/papers/On%20the%20Notions%20of%20Consistency%20and%20Predicate%20Locks%20in%20a%20Database%20System%20CACM.pdf?from=https://research.microsoft.com/en-
+[4] Kleppmann, Martin. Designing Data-Intensive Applications: The Big Ideas Behind Reliable, Scalable, and Maintainable Systems (p. 380). O'Reilly Media. Kindle Edition. 
+
+[5] https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-95-51.pdf
+
+[6] https://learn.microsoft.com/en-us/troubleshoot/sql/analysis-services/enable-snapshot-transaction-isolation-level
+
+[7] https://jimgray.azurewebsites.net/papers/On%20the%20Notions%20of%20Consistency%20and%20Predicate%20Locks%20in%20a%20Database%20System%20CACM.pdf?from=https://research.microsoft.com/en-
 us/um/people/gray/papers/On%20the%20Notions%20of%20Consistency%20and%20Predicate%20Locks%20in%20a%20Database%20System%20CACM.pdf&type=path
 
-[5] https://www.nginx.com/resources/wiki/modules/consistent_hash/
+[8] https://www.geeksforgeeks.org/snapshot-isolation-vs-serializable/
+
+[9] https://www.nginx.com/resources/wiki/modules/consistent_hash/
+
+
+
