@@ -68,11 +68,13 @@ Há duas possíveis formas de lidar com o Write Skew que eu conheço. Uma delas 
 
 # Particionamento por Load Balancer
 
+Outra abordagem para resolver o problema de concorrência é designar apenas uma instância do serviço para ser responsável por atualizar determinados dados. Neste exemplo específico, poderíamos utilizar o load balancer como particionador da requisição. Em outras palavras, configurar o Nginx para aplicar uma função hash à conta que será atualizada e, com base nesse resultado, determinar a instância responsável por efetuar essa atualização [5].
 
+É importante mencionar que, mesmo ao utilizar o particionamento por load balancer, cada instância ainda pode ter múltiplos threads e gerar concorrência no banco de dados, o que deve ser tratado separadamente. Um exemplo prático desse tipo de implementação foi utilizado nesse repositório e será explicado posteriormente.
 
 # Log Based Message Brokers
 
-Uma outra forma de resolver problemas de concorrências é utilizar um sistema de mensageria baseado em logs (tipo o Kafka), que permite você ordenar as mensagem por uma chave. O Kafka por exemplo permite que você adicione uma chave para ser usada como base para o particionamento das mensagens. No exemplo da rinha, poderiamos criar duas partições no Kafka e usar o id da conta como base para o particionamento e fazer cada uma das instâncias dos nossos serviços pegassem eventos de uma partição, consequentemente apenas uma instância iria inserir transações para determinada conta e assim resolveriamos o problema de concorrência entre instâncias.
+Outra abordagem para lidar com problemas de concorrência é utilizar um sistema de mensageria baseado em logs, como o Kafka. Esse tipo de sistema permite ordenar as mensagens por uma chave. No caso do Kafka, é possível adicionar uma chave para ser usada como base para o particionamento das mensagens. No exemplo da rinha, poderíamos criar duas partições no Kafka e utilizar o ID da conta como base para o particionamento. Cada instância dos nossos serviços poderia então consumir eventos de uma partição específica. Dessa forma, apenas uma instância seria responsável por inserir transações para uma determinada conta, resolvendo assim o problema de concorrência entre instâncias.
 
 ![image](https://github.com/gumberss/Rinha-Sharding/assets/38296002/fcab9947-dbcf-4d32-8328-81caa4a8cda4)
 
@@ -82,22 +84,22 @@ Uma outra forma de resolver problemas de concorrências é utilizar um sistema d
 4. O Kafka coloca na partição que a Instância 1 é responsável e a Instância 1 recebe esse evento;
 5. A Instância 1 corretamente atualiza o banco de dados com a informação.
 
-Para que a instância 2, que recebeu o request, possa dar a resposta HTTP corretamente, ela pode enviar junto com o evento, um tópico de resposta que a instância 1 pode publicar uma nova mensagem colocando a resposta. Outra forma seria um endpoint HTTP para devolver a resposta, emfim, vai da criativadade de cada um (e dos trade-offs e testes de carga depois). O gerenciamento da resposta pode ser implementado em memoria como no código desse repositório.
+Para que a instância 2, que recebeu o request, possa fornecer a resposta HTTP correta, ela pode enviar junto com o evento um tópico de resposta, e a instância 1 pode publicar uma nova mensagem colocando a resposta. Outra abordagem seria disponibilizar um endpoint HTTP dedicado para retornar a resposta. Em resumo, a implementação pode variar de acordo com a criatividade de cada um, considerando os trade-offs e os testes de carga subsequentes. O gerenciamento da resposta pode ser implementado em memória, como exemplificado no código deste repositório.
 
 ![image](https://github.com/gumberss/Rinha-Sharding/assets/38296002/f3018d6c-e585-472b-ad36-bc7b8c5a0cf0)
 
-1. Instância 1 publica a resposta no tópico de resposta do revento que recebeu;
+1. Instância 1 publica a resposta no tópico de resposta do evento que recebeu;
 2. O Kafka encaminha a resposta para a instância 2;
 3. A Instância 2 gerencia a resposta e devolve para o Nginx (pode ser implementado como foi nesse repositório);
 4. O Nginx devolve a resposta para o Gatling.
 
 # Api Sharding 
 
-Essa foi a solução no repositório em questão, devido a limitação de memória e processador, dificilmente conseguiriamos colocar eficientemente um Message Broker como o Kafka, que trata os problemas de tolerância a falha, particionamento, health check dos consumers, garantindo sempre um consumer para receber as mensagens através de consensus protocol. 
+Essa foi a solução adotada no repositório em questão. Devido às limitações de memória e processamento, a introdução eficiente de um Message Broker robusto, como o Kafka, que lida com questões como tolerância a falhas, particionamento, monitoramento da saúde dos consumidores e assegura um consumidor sempre disponível através de protocolos de consenso, seria desafiadora.
 
-Com a limitação mencionada acima dificilmente a solução desse repositório precisaria de uma boa alteração para conseguir suportar todos esses itens mencionados acima quanto outros também muito importante em sistemas distribuídos, mas ainda sim essa solução serviu como uma boa prova de conceito de como podemos solucionar problemas de concorrência.
+Diante das limitações mencionadas acima, a solução deste repositório necessitaria de uma revisão substancial para incorporar todos esses elementos, bem como outros aspectos essenciais em sistemas distribuídos. Mesmo assim, essa solução serviu como uma valiosa prova de conceito sobre como enfrentar e resolver problemas de concorrência.
 
-A solução do repositorio em questão consiste em cada instância ser responsável por determinadas contas do banco de dados, como são 2 instâncias e 6 contas, basicamente cada instância vai ser responsável por 3 contas apenas e caso chegue para elas um request que não seja de responsabilidade dela, ela automaticamente encaminha o request para a outra instância (passo número 3 da imagem abaixo). O endpoint Http insere os requests em uma fila de processamento e passa a aguardar a resposta na fila de resposta. Um job assincrono é responsável por ler as mensagens da fila de processamento, fazer as validações, inserir em lote (batch) dentro do banco de dados e colocar a resposta dentro da fila de resposta que é lida pelo endpoint Http que encaminha a resposta para o solicitante.
+A solução adotada pelo repositório envolve atribuir a cada instância a responsabilidade por determinadas contas do banco de dados. Como existem 2 instâncias e 6 contas, cada uma é responsável por 3 contas específicas. Se uma instância recebe um request que não está sob sua responsabilidade, ela o encaminha automaticamente para a outra instância (etapa número 3 na imagem abaixo). O endpoint HTTP insere os requests em uma fila de processamento e aguarda a resposta na fila de resposta. Um job assíncrono é encarregado de ler as mensagens da fila de processamento, realizar as validações, inserir em lote (batch) no banco de dados e colocar a resposta na fila de resposta. Essa fila é então lida pelo endpoint HTTP, que encaminha a resposta ao solicitante.
 
 
 ![image](https://github.com/gumberss/Rinha-Sharding/assets/38296002/d8e58634-e54b-48d9-a287-5cd92d017fa3)
@@ -113,3 +115,5 @@ A solução do repositorio em questão consiste em cada instância ser responsá
 
 [4] https://jimgray.azurewebsites.net/papers/On%20the%20Notions%20of%20Consistency%20and%20Predicate%20Locks%20in%20a%20Database%20System%20CACM.pdf?from=https://research.microsoft.com/en-
 us/um/people/gray/papers/On%20the%20Notions%20of%20Consistency%20and%20Predicate%20Locks%20in%20a%20Database%20System%20CACM.pdf&type=path
+
+[5] https://www.nginx.com/resources/wiki/modules/consistent_hash/
