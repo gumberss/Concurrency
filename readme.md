@@ -124,7 +124,7 @@ Diante das limitações mencionadas acima, a solução deste repositório necess
 
 A solução adotada pelo repositório envolve atribuir a cada instância a responsabilidade por determinadas contas do banco de dados. Como existem 2 instâncias e 6 contas, cada uma é responsável por 3 contas específicas. Se uma instância recebe um request que não está sob sua responsabilidade, ela o encaminha automaticamente para a outra instância (etapa número 3 na imagem abaixo). O endpoint HTTP insere os requests em uma fila de processamento e aguarda a resposta na fila de resposta. Um job assíncrono é encarregado de ler as mensagens da fila de processamento, realizar as validações, inserir em lote (batch) no banco de dados e colocar a resposta na fila de resposta. Essa fila é então lida pelo endpoint HTTP, que encaminha a resposta ao solicitante.
 
-![image](https://github.com/gumberss/Rinha-Sharding/assets/38296002/d8e58634-e54b-48d9-a287-5cd92d017fa3)
+![image](https://github.com/gumberss/Concurrency/assets/38296002/6f1247b8-4598-4a7d-94e4-bd1aaf1d92be)
 
 
 # Outras formas de resolver
