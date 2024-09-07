@@ -126,6 +126,11 @@ A solução adotada pelo repositório envolve atribuir a cada instância a respo
 
 ![image](https://github.com/gumberss/Concurrency/assets/38296002/6f1247b8-4598-4a7d-94e4-bd1aaf1d92be)
 
+## Resultados dessa solução
+
+Como comentado anteriormente essa foi a solução usada nesse repositorio e abaixo está o resultado obtido
+
+![image](https://github.com/user-attachments/assets/b2e94fa3-4ff5-4154-8565-61336685b5fa)
 
 # Outras formas de resolver
 
