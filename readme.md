@@ -1,4 +1,4 @@
-[![pt-br](https://img.shields.io/badge/lang-pt--br-green.svg)](https://github.com/gumberss/Concurrency/blob/main/readme-pt-BR.md)
+[![pt-br](https://img.shields.io/badge/lang-pt--br-green.svg)](https://github.com/gumberss/Concurrency/blob/main/readme.pt-BR.md)
 
 # Introduction
 
