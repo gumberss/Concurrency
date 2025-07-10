@@ -1,3 +1,5 @@
+[![pt-br](https://img.shields.io/badge/lang-pt--br-green.svg)](https://github.com/gumberss/Concurrency/blob/main/readme.md)
+
 # Introdução
 
 Os desafios relacionados à concorrência em sistemas distribuídos são, em sua maioria, bastante complexos [1], e existem diferentes níveis de segurança que podemos implementar. A escolha do nível de segurança a ser adotado geralmente depende do que desejamos manter consistente. No caso em que priorizamos a segurança e integridade das informações, especialmente ao lidar com dados inseridos e lidos no banco de dados, optamos por sacrificar um pouco da performance. No entanto, ao escolher o desempenho como prioridade, é crucial tomar decisões com cautela, uma vez que não queremos comprometer a integridade dos dados. Isso é particularmente relevante, pois os dados constituem a parte mais importante de uma empresa, e as decisões estratégicas muitas vezes dependem da sua precisão e confiabilidade.
